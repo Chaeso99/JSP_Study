@@ -7,6 +7,7 @@ public class CommentBean {
 	private String comment;
 	private String cip;
 	private String cregDate;
+	
 	public int getCnum() {
 		return cnum;
 	}

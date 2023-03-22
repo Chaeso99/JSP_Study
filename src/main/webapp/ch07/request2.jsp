@@ -7,7 +7,7 @@
 		
 		//ip값
 		String remoteAddr=request.getRemoteAddr();
-		
+		String method = request.getMethod();
 		String uri=request.getRequestURI();
 		StringBuffer url=request.getRequestURL();
 		
@@ -20,7 +20,8 @@
 %>
 protocol : <%=protocol%><br>
 port : <%=port%><br>
-remoteAddr : <%=remoteAddr%><br>
+remoteAddr : <%=remoteAddr%><br>d
+method : <%=method%><br>d
 uri: <%=uri%><br>
 url : <%=url%><br>
 query : <%=query%><br>

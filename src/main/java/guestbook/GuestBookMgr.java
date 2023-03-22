@@ -230,4 +230,6 @@ public class GuestBookMgr {
 			pool.freeConnection(con, pstmt);
 		}
 	}
+	
+	
 }
