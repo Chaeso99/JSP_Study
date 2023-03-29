@@ -5,7 +5,7 @@
 %>
 <link href="style.css" rel="stylesheet" type="text/css">
 <script type="text/javascript">
-	function loginCheck() {
+	function loginCheck() {.
 		if (document.loginFrm.id.value == "") {
 			alert("아이디를 입력해 주세요.");
 			document.loginFrm.id.focus();
