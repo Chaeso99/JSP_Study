@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.ssi.SSICommand;
 
+import com.mysql.cj.util.Util;
 import com.oreilly.servlet.MultipartRequest;
 import com.oreilly.servlet.multipart.DefaultFileRenamePolicy;
 
@@ -70,6 +71,7 @@ public class BoardMgr {
 			pool.freeConnection(con, pstmt);
 		}
 	}
+	
 	// board Max Num : num의 현재 최대값
 	public int getMaxNum() {
 		Connection con = null;
@@ -90,6 +92,7 @@ public class BoardMgr {
 		}
 		return maxNum;
 	}
+	
 	// board Total Count : 총 게시물 수
 	public int getTotalCount(String keyField, String keyWord) {
 		Connection con = null;
@@ -112,7 +115,6 @@ public class BoardMgr {
 			rs = pstmt.executeQuery();
 			if(rs.next())
 				totalCount = rs.getInt(1);
-			//System.out.println("mgrtotalcount :"+totalCount);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -120,10 +122,10 @@ public class BoardMgr {
 		}
 		return totalCount;
 	}
+	
 	// board List : 검색기능, 페이징 및 블록
 	// limit 시작번호, 가져올 개수
-	public Vector<BoardBean> getBoardList(String keyField, String keyWord, 
-	int start, int cnt) {
+	public Vector<BoardBean> getBoardList(String keyField, String keyWord, int start, int cnt) {
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -169,9 +171,139 @@ public class BoardMgr {
 	}
 	
 	// board Get : 게시물 한개 읽어오기(13개의 컬럼 리턴){
+	public BoardBean getBoard(int num) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
+		BoardBean bean = new BoardBean();
+		try {
+			con = pool.getConnection();
+			sql = "select * from tblboard where num = ?";
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, num);
+			rs = pstmt.executeQuery();
+			if(rs.next()) {
+				bean.setNum(rs.getInt("num"));
+				bean.setName(rs.getString("name"));
+				bean.setSubject(rs.getString("subject"));
+				bean.setContent(rs.getString("content"));
+				bean.setPos(rs.getInt("pos"));
+				bean.setRef(rs.getInt("ref"));
+				bean.setDepth(rs.getInt("depth"));
+				bean.setRegdate(rs.getString("regdate"));
+				bean.setPass(rs.getString("pass"));
+				bean.setIp(rs.getString("ip"));
+				bean.setCount(rs.getInt("count"));
+				bean.setFilename(rs.getString("filename"));
+				bean.setFilesize(rs.getInt("filesize"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt, rs);
+		}
+		return bean;	
+	}
+	
 	// Count up : 조회수 증가
+	public void upCount(int num) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		String sql = null;
+		try {
+			con = pool.getConnection();
+			sql = "UPDATE tblboard SET COUNT = COUNT+1 WHERE num = ? ";
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, num);
+			pstmt.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt);
+		}
+	}
+	
 	// board delete : 파일업로드 파일까지 삭제
+	public void deleteBoard(int num) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		String sql = null;
+		BoardMgr mgr = new BoardMgr();
+		BoardBean bean = mgr.getBoard(num);
+		
+		try {
+			String filename = bean.getFilename();
+			if(filename!=null&&!filename.equals("")) {
+				File f = new File(SAVEFOLDER+filename);
+				if(f.exists())
+					UtilMgr.delete(SAVEFOLDER+filename);
+			}
+			con = pool.getConnection();
+			sql = "delete from tblboard where num = ?";
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, num);
+			pstmt.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt);
+		}
+	}
+	
 	// board Update : 파일업로드 수정
+	// 파일이 업로드 수정이 되면 기존에 파일은 삭제되어야 한다.
+	// 첨부파일이 있는경우, 첨부파일이 없는경우 두가지로 나뉜다.
+	public void updateBoard(MultipartRequest multi) {
+			Connection con = null;
+			PreparedStatement pstmt = null;
+			String sql = null;
+	
+			try {
+				con = pool.getConnection();
+				int num = Integer.parseInt(multi.getParameter("num"));
+				String name = multi.getParameter("name");
+				String subject = multi.getParameter("subject");
+				String content = multi.getParameter("content");
+				String filename = multi.getFilesystemName("filename");
+				if(filename!=null&&!filename.equals("")) {
+					//파일 업로드 수정 선택-기존파일이 존재할경우 삭제해야한다.
+					BoardBean bean = getBoard(num);
+					String tempfile = bean.getFilename();
+					if(tempfile!=null&&!tempfile.equals("")) {
+						File f = new File(SAVEFOLDER+tempfile);
+						if(f.exists())
+							UtilMgr.delete(SAVEFOLDER+tempfile);
+					}
+					int filesize = (int)multi.getFile("filename").length();
+					sql = "update tblBoard set name=?, subject=?, content=?,"
+							+ "filename=?, filesize=? where num=?";
+					pstmt = con.prepareStatement(sql);
+					pstmt.setString(1, name);
+					pstmt.setString(2, subject);
+					pstmt.setString(3, content);
+					pstmt.setString(4, filename);
+					pstmt.setInt(5, filesize);
+					pstmt.setInt(6, num);
+				}else {
+					//수정 페이지에서 파일 업로드를 선택하지 않았을때
+					sql = "update tblBoard set name=?, subject=?, content=? "
+							+ "where num=?";
+					pstmt = con.prepareStatement(sql);
+					pstmt.setString(1, name);
+					pstmt.setString(2, subject);
+					pstmt.setString(3, content);
+					pstmt.setInt(4, num);
+				}
+				pstmt.executeUpdate();
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				pool.freeConnection(con, pstmt);
+			}
+			return;
+	}
+	
 	// board Reply : 답변글 입력
 	// board Reply Up : 답변글 위치값 수정
 	
@@ -197,6 +329,7 @@ public class BoardMgr {
 	
 	public static void main(String[] args) {
 		BoardMgr mgr = new BoardMgr();
-		
+		mgr.post1000();
+		System.out.println("입력성공");
 	}
 }

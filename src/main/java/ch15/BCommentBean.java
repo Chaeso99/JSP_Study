@@ -1,13 +1,11 @@
 package ch15;
 
 public class BCommentBean {
-
-	private int cnum;
-	private int num;
-	private String name;
-	private String comment;
-	private String regdate;
-	
+	int cnum;
+	int num;
+	String name;
+	String comment;
+	String regdate;
 	public int getCnum() {
 		return cnum;
 	}

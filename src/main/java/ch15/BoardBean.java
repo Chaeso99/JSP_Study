@@ -1,20 +1,21 @@
 package ch15;
 
+import java.util.*;
+
 public class BoardBean {
-	private int num;
-	private String name;
-	private String subject;
-	private String content;
-	private int pos;
-	private int ref;
-	private int depth;
-	private String regdate ;
-	private String pass;
-	private String ip;
-	private int count;
-	private String filename;
-	private String filesize;
-	
+	int num;
+	String name;
+	String subject;
+	String content;
+	int pos;
+	int ref;
+	int depth;
+	String regdate;
+	String pass;
+	String ip;
+	int count;
+	String filename;
+	int filesize;
 	public int getNum() {
 		return num;
 	}
@@ -87,10 +88,10 @@ public class BoardBean {
 	public void setFilename(String filename) {
 		this.filename = filename;
 	}
-	public String getFilesize() {
+	public int getFilesize() {
 		return filesize;
 	}
-	public void setFilesize(String filesize) {
+	public void setFilesize(int filesize) {
 		this.filesize = filesize;
 	}
 }

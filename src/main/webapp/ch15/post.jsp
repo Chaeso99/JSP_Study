@@ -23,16 +23,16 @@ enctype="multipart/form-data">
 			<tr>
 				<td width="10%">성 명</td>
 				<td width="90%">
-				<input name="name" size="10" maxlength="8" value="성명11"></td>
+				<input name="name" size="10" maxlength="8" value="aaa"></td>
 			</tr>
 			<tr>
 				<td>제 목</td>
 				<td>
-				<input name="subject" size="50" maxlength="30" value="제목11"></td>
+				<input name="subject" size="50" maxlength="30" value="테스트"></td>
 			</tr>
 			<tr>
 				<td>내 용</td>
-				<td><textarea name="content" rows="10" cols="50" value="내용11"></textarea></td>
+				<td><textarea name="content" rows="10" cols="50">내용테스트</textarea></td>
 			</tr>
 			<tr>
 				<td>비밀 번호</td>
