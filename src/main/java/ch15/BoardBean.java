@@ -16,6 +16,7 @@ public class BoardBean {
 	int count;
 	String filename;
 	int filesize;
+	
 	public int getNum() {
 		return num;
 	}
