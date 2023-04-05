@@ -170,10 +170,118 @@ public class PollMgr {
 	}
 		
 	//Count Sum:설문 투표수
+	public int getSumCount(int listNum){
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
+		int sum = 0;
+		
+		try {
+			con = pool.getConnection();
+			sql = "select sum(count) from tblPollItem where listnum = ?";
+			pstmt = con.prepareStatement(sql);
+			if(listNum==0) { //listNum이 Int형이라서 값이 없으면 Null이 아니라 0임 객체는 null이고 int는 0인상태
+				listNum = getMaxNum();
+			}
+			pstmt.setInt(1, listNum);
+			rs = pstmt.executeQuery();
+			if(rs.next()){
+				sum = rs.getInt(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt, rs);
+		}
+		return sum;
+	}
 	
 	//Poll Update:투표 실행
+	public boolean updatePoll(int listNum, String itemNum[]) {
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		String sql = null;
+		boolean flag = false;
+		
+		try {
+			con = pool.getConnection();
+			sql = "update tblPollItem set count = count + 1 "
+					+ "where listNum = ? and itemNum = ?";
+			pstmt = con.prepareStatement(sql);
+			if(listNum==0) {
+				listNum=getMaxNum();
+			}
+			for (int i = 0; i < itemNum.length; i++) {
+				pstmt.setInt(1, listNum);
+				pstmt.setInt(2, Integer.parseInt(itemNum[i]));
+				if(pstmt.executeUpdate()==1) {
+					flag = true;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt);
+		}
+		return flag;
+	}
 	
 	//Poll View:결과보기
+	//결과보기를 위해서는 Beans(아이템빈)의 구조를 알아야한다:처음에 배열로 선언했으니 배열로 리턴되어야 함
+	//한 행이 하나의 Beans로 리턴시키고 Vector에 넣을거임
+	public Vector<PollItemBean> getView(int listNum){
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
+		Vector<PollItemBean> vlist = new Vector<PollItemBean>();
+		
+		try {
+			con = pool.getConnection();
+			sql = "select item, count from tblPollItem where listNum=?";
+			pstmt = con.prepareStatement(sql);
+			pstmt.setInt(1, listNum==0?getMaxNum():listNum);
+			rs = pstmt.executeQuery();
+			while(rs.next()) {
+				PollItemBean piBean = new PollItemBean();
+				String item[] = new String[1];
+				item[0] = rs.getString("item");
+				piBean.setItem(item);
+				piBean.setCount(rs.getInt("count"));
+				vlist.addElement(piBean);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt, rs);
+		}
+		return vlist;
+	}
 	
-	//Max Item Count:
+	//Max Item Count:해당 설문에서 가장 높은 투표수
+	public int getMaxCount(int listNum){
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		String sql = null;
+		int max = 0;
+		
+		try {
+			con = pool.getConnection();
+			sql = "select max(count) from tblPollItem where listnum = ?";
+			pstmt = con.prepareStatement(sql);
+			//삼항 연산자를 사용하여 처리(CountSum 메소드에 있는내용과 같은뜻)
+			pstmt.setInt(1, listNum==0?getMaxNum():listNum);
+			rs = pstmt.executeQuery();
+			if(rs.next()){
+				max = rs.getInt(1);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			pool.freeConnection(con, pstmt, rs);
+		}
+		return max;
+	}
 }

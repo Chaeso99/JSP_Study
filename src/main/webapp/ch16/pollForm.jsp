@@ -13,7 +13,7 @@
 		String question = plBean.getQuestion();
 		int type = plBean.getType();
 		int active = plBean.getActive();
-		int sumCount = 0; //총 몇명이 투표했는지 - 아직 미구현
+		int sumCount = mgr.getSumCount(num); //총 몇명이 투표했는지
 		
 		//out.print(question + ":" + vItem.size());
 %>
